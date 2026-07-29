@@ -10,7 +10,8 @@ const USAGE = `${out.bold("Usage:")}
   ${out.fg(palette.helixBlueLight, "q-scanner scan-domain <host>")}   Scan a domain's TLS certificate
 
 ${out.bold("Options:")}
-  --format <table|json>          Output format (default: table)
+  --format <table|json|cbom>     Output format (default: table); cbom emits a CycloneDX Cryptography Bill of Materials
+  --lang <en|es>                  Output language (default: en)
   --fail-on <critical|high|medium|low>
                                   Exit 1 if the worst finding meets/exceeds this severity — wire into CI to gate a build
   -h, --help                     Show this help

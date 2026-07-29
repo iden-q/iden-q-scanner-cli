@@ -454,7 +454,7 @@ __metadata:
   dependencies:
     "@changesets/changelog-github": ^0.7.0
     "@changesets/cli": ^2.31.1
-    "@iden-q/scanner-lib": ^0.1.0
+    "@iden-q/scanner-lib": ^0.2.0
     "@types/node": ^20.19.42
     esbuild: ^0.28.1
     javascript-obfuscator: ^5.5.0
@@ -465,12 +465,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@iden-q/scanner-lib@npm:^0.1.0":
-  version: 0.1.0
-  resolution: "@iden-q/scanner-lib@npm:0.1.0"
+"@iden-q/scanner-lib@npm:^0.2.0":
+  version: 0.2.0
+  resolution: "@iden-q/scanner-lib@npm:0.2.0"
   dependencies:
     zod: ^4.4.3
-  checksum: c64f80eeb8ee6a99c03a113d91a87de2e967ec059d537bf9feb56fe76826c7defacd15b5d75fbc0826a2a192c9bb23935b3a579d5a63345cbc88699912be1ca5
+  checksum: 6ee8e383205d3d945978cb47775c587a21ab236735fe766c7db78a6cb255cd3df453b49a9a5fcd4b15b0546ef413548d6616afc777cc4aebd28d9704df075e9e
   languageName: node
   linkType: hard
 

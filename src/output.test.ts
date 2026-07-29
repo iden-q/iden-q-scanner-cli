@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { printReport } from "./output.js";
+import { printReport, printCbom } from "./output.js";
+import type { Cbom } from "@iden-q/scanner-lib";
 
 function captureLog(fn: () => void): string[] {
   const original = console.log;
@@ -74,6 +75,21 @@ test("printReport table format includes the summary line", () => {
   assert.match(output, /3 scanned/);
   assert.match(output, /1 critical/);
   assert.match(output, /QES 42/);
+});
+
+test("printCbom emits exactly one console.log call containing the CBOM as valid JSON", () => {
+  const cbom: Cbom = {
+    bomFormat: "CycloneDX",
+    specVersion: "1.6",
+    metadata: { timestamp: "2026-01-01T00:00:00.000Z", tool: "QuantumScanner" },
+    summary: { totalAssets: 0, quantumSafeCount: 0, quantumVulnerableCount: 0, fipsCoverage: {} },
+    components: [],
+  };
+  const lines = captureLog(() => printCbom(cbom));
+
+  assert.equal(lines.length, 1);
+  const parsed = JSON.parse(lines[0]);
+  assert.deepEqual(parsed, cbom);
 });
 
 test("printReport table format falls back to 'info' severity and '—' QES when missing", () => {

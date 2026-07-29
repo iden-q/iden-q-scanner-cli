@@ -13,6 +13,12 @@ const distIndex = join(dirname(fileURLToPath(import.meta.url)), "..", "dist", "i
 const RSA_PRIVATE_KEY_PEM =
   "-----BEGIN RSA PRIVATE KEY-----\nMIIBOgIBAAJBAK\n-----END RSA PRIVATE KEY-----";
 
+// A real BIP39-shaped seed phrase, alone on its own line — the wallet
+// scanner's location label for this is locale-dependent (unlike the PEM
+// header labels above, which are the standard's own English text and never
+// translated), so it's the fixture used to check --lang end-to-end.
+const SEED_PHRASE = "abandon ability able about above absent absorb abstract absurd abuse access accident";
+
 function runCli(args: string[], input?: string) {
   return spawnSync(process.execPath, [distIndex, ...args], {
     input,
@@ -60,6 +66,47 @@ test("scan --stdin --format json emits a parseable report with the expected shap
   assert.equal(report.files[0].fileName, "stdin");
   assert.equal(report.files[0].findings[0].algorithm, "RSA");
   assert.equal(report.files[0].findings[0].severity, "critical");
+});
+
+test("scan --stdin defaults to English location text for a wallet finding", (t) => {
+  if (!existsSync(distIndex)) return t.skip("dist/index.js not built — run yarn build first");
+
+  const result = runCli(["scan", "--stdin"], SEED_PHRASE);
+
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /Possible seed phrase \(BIP39\)/);
+});
+
+test("scan --stdin --lang es localizes wallet finding location text to Spanish", (t) => {
+  if (!existsSync(distIndex)) return t.skip("dist/index.js not built — run yarn build first");
+
+  const result = runCli(["scan", "--stdin", "--lang", "es"], SEED_PHRASE);
+
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /Posible frase semilla \(BIP39\)/);
+});
+
+test("scan --stdin --lang fr rejects an unsupported language", (t) => {
+  if (!existsSync(distIndex)) return t.skip("dist/index.js not built — run yarn build first");
+
+  const result = runCli(["scan", "--stdin", "--lang", "fr"], RSA_PRIVATE_KEY_PEM);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /--lang must be one of/);
+});
+
+test("scan --stdin --format cbom emits a CycloneDX CBOM tagging RSA with its FIPS 203 migration target", (t) => {
+  if (!existsSync(distIndex)) return t.skip("dist/index.js not built — run yarn build first");
+
+  const result = runCli(["scan", "--stdin", "--format", "cbom"], RSA_PRIVATE_KEY_PEM);
+
+  assert.equal(result.status, 0);
+  const cbom = JSON.parse(result.stdout);
+  assert.equal(cbom.bomFormat, "CycloneDX");
+  const rsa = cbom.components.find((c: { name: string }) => c.name === "RSA");
+  assert.ok(rsa, "expected an RSA component in the CBOM");
+  assert.equal(rsa.cryptoProperties.algorithmProperties.nistQuantumSafe, false);
+  assert.match(rsa.migrationTarget, /FIPS 203/);
 });
 
 test("--help prints usage and exits 0", (t) => {

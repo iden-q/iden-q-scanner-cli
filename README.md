@@ -32,13 +32,14 @@ Usage:
   q-scanner scan-domain <host>   Scan a domain's TLS certificate
 
 Options:
-  --format <table|json>          Output format (default: table)
+  --format <table|json|cbom>     Output format (default: table); cbom emits a CycloneDX Cryptography Bill of Materials
+  --lang <en|es>                  Output language (default: en)
   --fail-on <critical|high|medium|low>
                                   Exit 1 if the worst finding meets/exceeds this severity
   -h, --help                     Show this help
 ```
 
-Output is in English only. Colored, animated output is used automatically on an interactive terminal (respects `NO_COLOR`); it's plain text — and quiet, no spinner frames — when piped or run in CI.
+Output defaults to English; pass `--lang es` for Spanish (finding locations, error messages, and regulatory notes). Colored, animated output is used automatically on an interactive terminal (respects `NO_COLOR`); it's plain text — and quiet, no spinner frames — when piped or run in CI.
 
 <p align="center">
   <img src="./assets/terminal.png" alt="q-scanner scan ./src — colored terminal output" width="720" />
@@ -62,6 +63,18 @@ Gate a CI step on findings — fail the build if a diff introduces anything high
 
 ```bash
 git diff origin/main...HEAD | q-scanner scan --stdin --fail-on high
+```
+
+Scan in Spanish:
+
+```bash
+q-scanner scan ./src --lang es
+```
+
+Emit a Cryptography Bill of Materials (CycloneDX, tagging PQC algorithms with their NIST FIPS standard — ML-KEM/FIPS 203, ML-DSA/FIPS 204, SLH-DSA/FIPS 205):
+
+```bash
+q-scanner scan ./src --format cbom > cbom.json
 ```
 
 ## A note on the published build

@@ -1,4 +1,4 @@
-import type { Severity } from "@iden-q/scanner-lib";
+import type { Cbom, Severity } from "@iden-q/scanner-lib";
 import { palette, out, err, type Painter, SEVERITY_COLOR, SEVERITY_ICON } from "./theme.js";
 
 interface FindingLike {
@@ -53,4 +53,11 @@ export function printReport(report: Report, format: "table" | "json"): void {
     if (domain.certificate) printFindings(domain.domain, domain.certificate.findings);
   }
   for (const line of summaryFooterLines(report, out)) console.log(line);
+}
+
+/** A CBOM is a machine-consumption artifact (feeds CycloneDX/SBOM tooling
+ * downstream), so it's always emitted as plain JSON — no table rendering,
+ * unlike --format table for the human-facing findings report above. */
+export function printCbom(cbom: Cbom): void {
+  console.log(JSON.stringify(cbom, null, 2));
 }
