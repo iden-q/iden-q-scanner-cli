@@ -1,7 +1,7 @@
 import { parseArgs } from "node:util";
 import { buildReport, buildCbom } from "@iden-q/scanner-lib";
 import { probeDomain } from "@iden-q/scanner-lib/node";
-import { printReport, printCbom } from "../output.js";
+import { printReport, printCbom, renderReportFile, renderCbomFile, defaultOutputPath, saveReportFile } from "../output.js";
 import { applyFailOn } from "../severity-gate.js";
 import { resolveLocale } from "../locale.js";
 import { Spinner } from "../spinner.js";
@@ -13,6 +13,7 @@ export async function scanDomainCommand(argv: string[]): Promise<void> {
       format: { type: "string", default: "table" },
       lang: { type: "string", default: "en" },
       "fail-on": { type: "string" },
+      output: { type: "string" },
     },
     allowPositionals: true,
   });
@@ -25,12 +26,20 @@ export async function scanDomainCommand(argv: string[]): Promise<void> {
   const result = await probeDomain(domain, locale);
   spinner.stop();
 
-  if (values.format === "cbom") {
-    printCbom(buildCbom([], [result]));
+  const format = values.format === "cbom" ? "cbom" : values.format === "json" ? "json" : "table";
+  const report = buildReport([], [result], locale);
+  let fileContent: string;
+
+  if (format === "cbom") {
+    const cbom = buildCbom([], [result]);
+    printCbom(cbom, report.summary);
+    fileContent = renderCbomFile(cbom);
   } else {
-    const report = buildReport([], [result], locale);
-    printReport(report, values.format === "json" ? "json" : "table");
+    printReport(report, format);
+    fileContent = renderReportFile(report, format);
   }
+
+  await saveReportFile(values.output ?? defaultOutputPath(format), fileContent);
 
   if (!result.connected) {
     console.error(result.error ?? "connection failed");

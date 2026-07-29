@@ -10,7 +10,7 @@ import {
   type ScanResult,
 } from "@iden-q/scanner-lib";
 import { walk, isBinaryCert } from "../fs-walk.js";
-import { printReport, printCbom } from "../output.js";
+import { printReport, printCbom, renderReportFile, renderCbomFile, defaultOutputPath, saveReportFile } from "../output.js";
 import { applyFailOn } from "../severity-gate.js";
 import { resolveLocale } from "../locale.js";
 import { Spinner } from "../spinner.js";
@@ -29,6 +29,7 @@ export async function scanCommand(argv: string[]): Promise<void> {
       format: { type: "string", default: "table" },
       lang: { type: "string", default: "en" },
       "fail-on": { type: "string" },
+      output: { type: "string" },
     },
     allowPositionals: true,
   });
@@ -67,12 +68,20 @@ export async function scanCommand(argv: string[]): Promise<void> {
     spinner.stop();
   }
 
-  if (values.format === "cbom") {
-    printCbom(buildCbom(results, []));
+  const format = values.format === "cbom" ? "cbom" : values.format === "json" ? "json" : "table";
+  const report = buildReport(results, [], locale);
+  let fileContent: string;
+
+  if (format === "cbom") {
+    const cbom = buildCbom(results, []);
+    printCbom(cbom, report.summary);
+    fileContent = renderCbomFile(cbom);
   } else {
-    const report = buildReport(results, [], locale);
-    printReport(report, values.format === "json" ? "json" : "table");
+    printReport(report, format);
+    fileContent = renderReportFile(report, format);
   }
+
+  await saveReportFile(values.output ?? defaultOutputPath(format), fileContent);
 
   const worst = worstSeverity(results.flatMap((r) => r.findings).map(getSeverity));
   applyFailOn(worst, values["fail-on"]);

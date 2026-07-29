@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { printReport, printCbom } from "./output.js";
+import { printReport, printCbom, renderReportFile, renderCbomFile, defaultOutputPath } from "./output.js";
 import type { Cbom } from "@iden-q/scanner-lib";
 
 function captureLog(fn: () => void): string[] {
@@ -13,6 +13,20 @@ function captureLog(fn: () => void): string[] {
     fn();
   } finally {
     console.log = original;
+  }
+  return lines;
+}
+
+function captureError(fn: () => void): string[] {
+  const original = console.error;
+  const lines: string[] = [];
+  console.error = (...args: unknown[]) => {
+    lines.push(args.map(String).join(" "));
+  };
+  try {
+    fn();
+  } finally {
+    console.error = original;
   }
   return lines;
 }
@@ -77,19 +91,56 @@ test("printReport table format includes the summary line", () => {
   assert.match(output, /QES 42/);
 });
 
+const sampleCbom: Cbom = {
+  bomFormat: "CycloneDX",
+  specVersion: "1.6",
+  metadata: { timestamp: "2026-01-01T00:00:00.000Z", tool: "QuantumScanner" },
+  summary: { totalAssets: 0, quantumSafeCount: 0, quantumVulnerableCount: 0, fipsCoverage: {} },
+  components: [],
+};
+
 test("printCbom emits exactly one console.log call containing the CBOM as valid JSON", () => {
-  const cbom: Cbom = {
-    bomFormat: "CycloneDX",
-    specVersion: "1.6",
-    metadata: { timestamp: "2026-01-01T00:00:00.000Z", tool: "QuantumScanner" },
-    summary: { totalAssets: 0, quantumSafeCount: 0, quantumVulnerableCount: 0, fipsCoverage: {} },
-    components: [],
-  };
-  const lines = captureLog(() => printCbom(cbom));
+  const lines = captureLog(() => printCbom(sampleCbom, sampleReport.summary));
 
   assert.equal(lines.length, 1);
   const parsed = JSON.parse(lines[0]);
-  assert.deepEqual(parsed, cbom);
+  assert.deepEqual(parsed, sampleCbom);
+});
+
+test("printCbom prints the summary + idenq.io footer to stderr, keeping stdout pure JSON", () => {
+  const errLines = captureError(() => printCbom(sampleCbom, sampleReport.summary));
+  const output = errLines.join("\n");
+
+  assert.match(output, /Summary/);
+  assert.match(output, /3 scanned/);
+  assert.match(output, /idenq\.io/);
+});
+
+test("renderCbomFile returns the CBOM as plain JSON, no footer", () => {
+  const content = renderCbomFile(sampleCbom);
+
+  assert.deepEqual(JSON.parse(content), sampleCbom);
+  assert.doesNotMatch(content, /idenq\.io/);
+});
+
+test("renderReportFile json format returns plain JSON matching the report, no footer", () => {
+  const content = renderReportFile(sampleReport, "json");
+
+  assert.deepEqual(JSON.parse(content), sampleReport);
+  assert.doesNotMatch(content, /idenq\.io/);
+});
+
+test("renderReportFile table format has no ANSI color codes", () => {
+  const content = renderReportFile(sampleReport, "table");
+
+  assert.match(content, /RSA/);
+  assert.doesNotMatch(content, /\x1b\[/);
+});
+
+test("defaultOutputPath names the file after the format", () => {
+  assert.equal(defaultOutputPath("table"), "q-scanner-report.txt");
+  assert.equal(defaultOutputPath("json"), "q-scanner-report.json");
+  assert.equal(defaultOutputPath("cbom"), "q-scanner-report.cbom.json");
 });
 
 test("printReport table format falls back to 'info' severity and '—' QES when missing", () => {

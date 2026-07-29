@@ -34,12 +34,15 @@ Usage:
 Options:
   --format <table|json|cbom>     Output format (default: table); cbom emits a CycloneDX Cryptography Bill of Materials
   --lang <en|es>                  Output language (default: en)
+  --output <path>                 Where to write the report file (default: ./q-scanner-report.<ext>, written every run)
   --fail-on <critical|high|medium|low>
                                   Exit 1 if the worst finding meets/exceeds this severity
   -h, --help                     Show this help
 ```
 
 Output defaults to English; pass `--lang es` for Spanish (finding locations, error messages, and regulatory notes). Colored, animated output is used automatically on an interactive terminal (respects `NO_COLOR`); it's plain text — and quiet, no spinner frames — when piped or run in CI.
+
+Every run also writes the report to disk (in the requested `--format`) so it can be picked up by report tooling without remembering to redirect stdout — to `./q-scanner-report.<txt|json|cbom.json>` by default, or wherever `--output <path>` points.
 
 <p align="center">
   <img src="./assets/terminal.png" alt="q-scanner scan ./src — colored terminal output" width="720" />
@@ -71,10 +74,10 @@ Scan in Spanish:
 q-scanner scan ./src --lang es
 ```
 
-Emit a Cryptography Bill of Materials (CycloneDX, tagging PQC algorithms with their NIST FIPS standard — ML-KEM/FIPS 203, ML-DSA/FIPS 204, SLH-DSA/FIPS 205):
+Emit a Cryptography Bill of Materials (CycloneDX, tagging PQC algorithms with their NIST FIPS standard — ML-KEM/FIPS 203, ML-DSA/FIPS 204, SLH-DSA/FIPS 205) to a specific path — omit `--output` and it still lands at `./q-scanner-report.cbom.json`:
 
 ```bash
-q-scanner scan ./src --format cbom > cbom.json
+q-scanner scan ./src --format cbom --output cbom.json
 ```
 
 ## A note on the published build

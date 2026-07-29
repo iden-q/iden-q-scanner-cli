@@ -12,6 +12,7 @@ const USAGE = `${out.bold("Usage:")}
 ${out.bold("Options:")}
   --format <table|json|cbom>     Output format (default: table); cbom emits a CycloneDX Cryptography Bill of Materials
   --lang <en|es>                  Output language (default: en)
+  --output <path>                 Where to write the report file (default: ./q-scanner-report.<ext>, written every run)
   --fail-on <critical|high|medium|low>
                                   Exit 1 if the worst finding meets/exceeds this severity — wire into CI to gate a build
   -h, --help                     Show this help
