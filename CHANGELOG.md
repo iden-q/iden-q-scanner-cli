@@ -1,5 +1,13 @@
 # @iden-q/scanner-cli
 
+## 0.4.0
+
+### Minor Changes
+
+- [`f4cd748`](https://github.com/iden-q/iden-q-scanner-cli/commit/f4cd748a5fe8fb60281c9e4b68b9052c07092c85) Thanks [@cesarmoralesonya](https://github.com/cesarmoralesonya)! - `--format cbom` now prints the same summary + idenq.io closing footer as `table`/`json` (previously silent) — still routed to stderr so stdout and the on-disk file stay pure JSON.
+
+  Every `scan`/`scan-domain` run now writes its report to disk in the requested `--format`, not just stdout: to `./q-scanner-report.<txt|json|cbom.json>` by default, or to `--output <path>` when given — so a report file is always there to pick up in CI/report tooling without remembering to redirect stdout yourself.
+
 ## 0.3.0
 
 ### Minor Changes
