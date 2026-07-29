@@ -1,0 +1,72 @@
+name: CD
+
+# Chained after CI via workflow_run (matched by CI's `name:`, not by living in
+# the same file) — this only ever runs against a commit on main that has
+# already passed install/typecheck/build/test in ci.yml. If CI failed, this
+# doesn't run at all.
+#
+# On each qualifying run: Changesets checks for pending changesets (added via
+# `yarn changeset`). If any exist, it opens/updates a "Version Packages" PR
+# that bumps package.json + CHANGELOG.md — merging that PR is the deliberate
+# human gate. Once merged (no changesets left pending), this same workflow
+# publishes to npm and tags the release automatically.
+#
+# workflow_dispatch stays as a manual escape hatch (e.g. bootstrapping the
+# very first publish).
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Pin to the exact commit CI just passed, not just whatever HEAD of
+          # main happens to be right now — matters if another push landed on
+          # main between CI finishing and this job starting.
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
+          fetch-depth: 0 # changesets needs full history to diff against main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          registry-url: https://registry.npmjs.org
+
+      - name: install (frozen lockfile)
+        run: yarn install --immutable
+
+      # Defense in depth, independent of npm's own publish lifecycle: this
+      # repeats the same build+obfuscate+verify that package.json's
+      # prepublishOnly runs, but as an explicit CI step rather than relying
+      # solely on that hook firing — prepublishOnly (and therefore this
+      # protection) is silently skipped by `npm publish --ignore-scripts` or
+      # an `ignore-scripts` npm config, neither of which this job sets, but
+      # neither of which should be able to quietly slip a readable,
+      # unobfuscated dist/index.js onto the registry either.
+      - name: build & verify no sourcemaps leak into the tarball
+        run: yarn build && yarn verify:no-sourcemaps
+
+      # `yarn build` still runs per-package as part of prepublishOnly (see
+      # package.json) right before each npm publish, so what's published is
+      # always freshly obfuscated, never stale.
+      - name: create/update "Version Packages" PR, or publish if none pending
+        uses: changesets/action@v1
+        with:
+          publish: yarn release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

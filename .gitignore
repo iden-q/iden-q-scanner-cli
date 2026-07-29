@@ -1,0 +1,10 @@
+node_modules/
+dist/
+dist-maps/
+
+# Yarn Berry — keep the pinned release binary, ignore local state/cache
+.yarn/*
+!.yarn/releases
+.pnp.*
+
+tsconfig.tsbuildinfo
