@@ -448,12 +448,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@iden-q/post-quantum@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "@iden-q/post-quantum@npm:1.2.0"
+  dependencies:
+    "@noble/ciphers": ^2.2.0
+    "@noble/curves": ^2.2.0
+    "@noble/hashes": ^2.2.0
+    "@noble/post-quantum": ^0.6.1
+    hash-wasm: ^4.12.0
+  checksum: 6607b2c70777bdd418dc4d21fba3449a2d165f781ad4d3abf11cb3c04735b6827c7284147833063815be514e8dff8373930ec14a8dc2457e2095187e7287c849
+  languageName: node
+  linkType: hard
+
 "@iden-q/scanner-cli@workspace:.":
   version: 0.0.0-use.local
   resolution: "@iden-q/scanner-cli@workspace:."
   dependencies:
     "@changesets/changelog-github": ^0.7.0
     "@changesets/cli": ^2.31.1
+    "@iden-q/post-quantum": ^1.2.0
     "@iden-q/scanner-lib": ^0.3.0
     "@types/node": ^20.19.42
     esbuild: ^0.28.1
@@ -601,6 +615,63 @@ __metadata:
     globby: ^11.0.0
     read-yaml-file: ^1.1.0
   checksum: f5a756e5a659e0e1c33f48852d56826d170d5b10a3cdea89ce4fcaa77678d8799aa4004b30e1985c87b73dbc390b95bb6411b78336dd1e0db87c08c74b5c0e74
+  languageName: node
+  linkType: hard
+
+"@noble/ciphers@npm:^2.2.0":
+  version: 2.3.0
+  resolution: "@noble/ciphers@npm:2.3.0"
+  checksum: 03d02c3967afce8469983c1ca1cada11e77c6620ed9f35137863593a69ead6bdf3a55d774d17492a8608d7813569b945814caa50bd2d6d8f8a3fef0b9a4498c7
+  languageName: node
+  linkType: hard
+
+"@noble/ciphers@npm:~2.2.0":
+  version: 2.2.0
+  resolution: "@noble/ciphers@npm:2.2.0"
+  checksum: b980058d330293fa313e58f92193383c618f82473a95913b200b25e3fe016297550dae1701f7cac42296cb6d7605c56af7b1fda8aa16fca7c60a03f560ae960a
+  languageName: node
+  linkType: hard
+
+"@noble/curves@npm:^2.2.0":
+  version: 2.3.0
+  resolution: "@noble/curves@npm:2.3.0"
+  dependencies:
+    "@noble/hashes": 2.3.0
+  checksum: 49a022154b53cd8204fc03fe3b5147c498928ec93382c2fe7ef884b26d5314ac38a022642757343228cd9ea10bec5fc070e7ccda8dca19324873ae3d054cf4d6
+  languageName: node
+  linkType: hard
+
+"@noble/curves@npm:~2.2.0":
+  version: 2.2.0
+  resolution: "@noble/curves@npm:2.2.0"
+  dependencies:
+    "@noble/hashes": 2.2.0
+  checksum: 2b6f02c18918578f528791644886f54333c67323f5ccefe10bf250f08760f63786b807390d8d5f8562c661e70dd3559ce8e51e1fe360118c8fd47071c2bd6991
+  languageName: node
+  linkType: hard
+
+"@noble/hashes@npm:2.2.0, @noble/hashes@npm:~2.2.0":
+  version: 2.2.0
+  resolution: "@noble/hashes@npm:2.2.0"
+  checksum: a8745fb5da57a73ddd3dd6d5ad45d156ea664be51ead5344ca1528f8e56ad0ba0720ec8adff3bda37c50c72a86a33a57332ec02c3fb8d2a2612f9c3e5e7079ab
+  languageName: node
+  linkType: hard
+
+"@noble/hashes@npm:2.3.0, @noble/hashes@npm:^2.2.0":
+  version: 2.3.0
+  resolution: "@noble/hashes@npm:2.3.0"
+  checksum: 6e134d0013843a3d1757d84dce198fe7f3c2282e32dc44d40a20974943d43e9cc925dea840a231d1f9ac2ff748291004c53dd9172577352f0c9f04aa1f5cb2dc
+  languageName: node
+  linkType: hard
+
+"@noble/post-quantum@npm:^0.6.1":
+  version: 0.6.1
+  resolution: "@noble/post-quantum@npm:0.6.1"
+  dependencies:
+    "@noble/ciphers": ~2.2.0
+    "@noble/curves": ~2.2.0
+    "@noble/hashes": ~2.2.0
+  checksum: 0279c34dab920ddbca3cfd91c90463e5b9a9a236909a4d0c2adc14388333f07b9366146e231a7ce2252afe110b255726627ca8ca7072cacefd5d65126a365f7b
   languageName: node
   linkType: hard
 
@@ -1530,6 +1601,13 @@ __metadata:
   dependencies:
     has-symbols: ^1.0.3
   checksum: 999d60bb753ad714356b2c6c87b7fb74f32463b8426e159397da4bde5bca7e598ab1073f4d8d4deafac297f2eb311484cd177af242776bf05f0d11565680468d
+  languageName: node
+  linkType: hard
+
+"hash-wasm@npm:^4.12.0":
+  version: 4.12.0
+  resolution: "hash-wasm@npm:4.12.0"
+  checksum: f292c94a19a3d7c075e1e7de2764ba8a006ae5a9551b1a35c61f693035df7977e6cb41f3fc036deb4a724e1949711b7cba06f7ad174f5aeb295edb64649b4a32
   languageName: node
   linkType: hard
 
