@@ -57,9 +57,15 @@ paths CI depends on.
   key-establishment telemetry to `tx-platform`'s ingest endpoint. It is opt-in, off the
   scan's critical path (never affects findings or exit code), and standalone by default —
   so the CLI stays independently actionable, but it is no longer a pure offline client.
+  Both mesh credential modes are carried: an API key (`client_credentials`, inline or env)
+  and a public-key credential (`private_key_jwt` — an ML-DSA-44 private JWK in
+  `IDENQ_MESH_PRIVATE_KEY`, env-only, signed locally with `@iden-q/post-quantum`; the
+  private half never leaves the process). `buildMeshCredential` derives the signer and is
+  unit-tested against the JWK's own verification key.
   Still open: `scan-domain` does not emit yet (mesh emission is `scan`-only), and there
   is no execution test that exercises the live emit path (the `resolveMeshEmit` resolver
-  is unit-tested; the network round-trip is covered in the library).
+  and `buildMeshCredential` are unit-tested; the network round-trip is covered in the
+  library).
 
 ## Where to start
 

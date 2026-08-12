@@ -32,6 +32,7 @@
     "prepublishOnly": "yarn build && yarn verify:no-sourcemaps"
   },
   "dependencies": {
+    "@iden-q/post-quantum": "^1.2.0",
     "@iden-q/scanner-lib": "^0.3.0"
   },
   "devDependencies": {

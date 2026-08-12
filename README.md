@@ -98,7 +98,11 @@ IDENQ_MESH_URL=https://idenq.io \
 The scanner is **standalone by default** — it makes no network call and works fully offline. `--connect-mesh` opts a `scan` in to emitting **anonymous key-establishment telemetry** (which fraction of detected key establishment is classical, hybrid, or post-quantum) to the iden-q mesh. Nothing that identifies the machine, the host, or the code is sent — only public facts and counts.
 
 - **Off the critical path.** Emission never changes the scan's findings, output, or exit code. A mesh that is unreachable, misconfigured, or slow yields at most a warning on stderr; `--fail-on` still gates on the scan alone.
-- **Credential** — an API key (`client_credentials`): `clientId` + secret. Inline via `--mesh-key clientId:apiKey`, or (preferred in CI, so the secret never appears in `argv`) via `IDENQ_MESH_CLIENT_ID` + `IDENQ_MESH_API_KEY`. Inline wins when both are present.
+- **Credential** — either mode the mesh accepts:
+  - **API key** (`client_credentials`): `clientId` + secret. Inline via `--mesh-key clientId:apiKey`, or (preferred in CI, so the secret never appears in `argv`) via `IDENQ_MESH_CLIENT_ID` + `IDENQ_MESH_API_KEY`.
+  - **Public key** (`private_key_jwt`): the ML-DSA-44 private JWK the console mints, in `IDENQ_MESH_PRIVATE_KEY` (the JWK JSON), with `IDENQ_MESH_CLIENT_ID`. The CLI signs a short-lived assertion per token; the private half never leaves the process and no shared secret is sent. Because it is a secret it is **environment-only** — there is no inline flag for it.
+
+  Precedence: an inline `--mesh-key` wins; otherwise a private JWK in the environment is preferred over an API key (public-key auth is the stronger of the two).
 - **Target** — required, no default: `--mesh-url` or `IDENQ_MESH_URL`. Emitting is always a named target, never an accidental production write.
 
 `scan-domain` does not yet emit; mesh emission is currently `scan`-only.

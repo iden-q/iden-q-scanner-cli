@@ -17,7 +17,9 @@ ${out.bold("Options:")}
                                   Exit 1 if the worst finding meets/exceeds this severity — wire into CI to gate a build
   --connect-mesh                  Emit anonymous key-establishment telemetry to the iden-q mesh (scan only;
                                   standalone by default). Never affects the scan result or exit code.
-  --mesh-key <clientId:apiKey>    Mesh API key inline; or set IDENQ_MESH_CLIENT_ID + IDENQ_MESH_API_KEY (preferred in CI)
+  --mesh-key <clientId:apiKey>    Mesh API key inline; or set IDENQ_MESH_CLIENT_ID + IDENQ_MESH_API_KEY (preferred in CI).
+                                  Public-key auth instead: IDENQ_MESH_CLIENT_ID + IDENQ_MESH_PRIVATE_KEY (the ML-DSA-44
+                                  JWK; env-only, never argv). A private JWK is preferred over an API key when both are set.
   --mesh-url <url>                Mesh base URL; or IDENQ_MESH_URL. Required to emit — there is no default target.
   -h, --help                     Show this help
 `;
