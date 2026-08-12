@@ -1,5 +1,11 @@
 # @iden-q/scanner-cli
 
+## 0.4.1
+
+### Patch Changes
+
+- [#7](https://github.com/iden-q/iden-q-scanner-cli/pull/7) [`387f79a`](https://github.com/iden-q/iden-q-scanner-cli/commit/387f79abeb723caf7d1ecabc1bee7f658dece7aa) Thanks [@cesarmoralesonya](https://github.com/cesarmoralesonya)! - Ship the honest-detector upgrade to CLI users: the bundled `@iden-q/scanner-lib` moves to 0.2.2, adding Taproot/bech32m address detection, EdDSA + modern signature/key-agreement OIDs, safe symmetric/hash coverage, post-quantum family + hybrid key-establishment detection, per-match findings with line numbers, and Ethereum EIP-55 checksum validation. All patch-level, no CLI API change.
+
 ## 0.4.0
 
 ### Minor Changes
