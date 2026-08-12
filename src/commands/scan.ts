@@ -14,6 +14,7 @@ import { printReport, printCbom, renderReportFile, renderCbomFile, defaultOutput
 import { applyFailOn } from "../severity-gate.js";
 import { resolveLocale } from "../locale.js";
 import { Spinner } from "../spinner.js";
+import { maybeEmitToMesh } from "../mesh-emit.js";
 
 async function readStdin(): Promise<string> {
   const chunks: Buffer[] = [];
@@ -30,6 +31,9 @@ export async function scanCommand(argv: string[]): Promise<void> {
       lang: { type: "string", default: "en" },
       "fail-on": { type: "string" },
       output: { type: "string" },
+      "connect-mesh": { type: "boolean", default: false },
+      "mesh-key": { type: "string" },
+      "mesh-url": { type: "string" },
     },
     allowPositionals: true,
   });
@@ -82,6 +86,14 @@ export async function scanCommand(argv: string[]): Promise<void> {
   }
 
   await saveReportFile(values.output ?? defaultOutputPath(format), fileContent);
+
+  // Opt-in mesh emission, before the fail-on gate (which may exit): a scan that
+  // fails its CI severity gate still contributes its anonymous observations.
+  await maybeEmitToMesh(
+    results.flatMap((r) => r.findings),
+    { connect: values["connect-mesh"], key: values["mesh-key"], url: values["mesh-url"] },
+    locale
+  );
 
   const worst = worstSeverity(results.flatMap((r) => r.findings).map(getSeverity));
   applyFailOn(worst, values["fail-on"]);

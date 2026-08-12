@@ -37,6 +37,10 @@ Options:
   --output <path>                 Where to write the report file (default: ./q-scanner-report.<ext>, written every run)
   --fail-on <critical|high|medium|low>
                                   Exit 1 if the worst finding meets/exceeds this severity
+  --connect-mesh                  Emit anonymous key-establishment telemetry to the iden-q mesh (scan only;
+                                  standalone by default). Never affects the scan result or exit code.
+  --mesh-key <clientId:apiKey>    Mesh API key inline; or set IDENQ_MESH_CLIENT_ID + IDENQ_MESH_API_KEY (preferred in CI)
+  --mesh-url <url>                Mesh base URL; or IDENQ_MESH_URL. Required to emit — there is no default target.
   -h, --help                     Show this help
 ```
 
@@ -79,6 +83,25 @@ Emit a Cryptography Bill of Materials (CycloneDX, tagging PQC algorithms with th
 ```bash
 q-scanner scan ./src --format cbom --output cbom.json
 ```
+
+Connect a CI scan to the iden-q mesh (credentials from the pipeline's secret store, never in argv):
+
+```bash
+IDENQ_MESH_CLIENT_ID=$MESH_CLIENT_ID \
+IDENQ_MESH_API_KEY=$MESH_API_KEY \
+IDENQ_MESH_URL=https://idenq.io \
+  q-scanner scan ./src --connect-mesh
+```
+
+## Connecting to the mesh (`--connect-mesh`)
+
+The scanner is **standalone by default** — it makes no network call and works fully offline. `--connect-mesh` opts a `scan` in to emitting **anonymous key-establishment telemetry** (which fraction of detected key establishment is classical, hybrid, or post-quantum) to the iden-q mesh. Nothing that identifies the machine, the host, or the code is sent — only public facts and counts.
+
+- **Off the critical path.** Emission never changes the scan's findings, output, or exit code. A mesh that is unreachable, misconfigured, or slow yields at most a warning on stderr; `--fail-on` still gates on the scan alone.
+- **Credential** — an API key (`client_credentials`): `clientId` + secret. Inline via `--mesh-key clientId:apiKey`, or (preferred in CI, so the secret never appears in `argv`) via `IDENQ_MESH_CLIENT_ID` + `IDENQ_MESH_API_KEY`. Inline wins when both are present.
+- **Target** — required, no default: `--mesh-url` or `IDENQ_MESH_URL`. Emitting is always a named target, never an accidental production write.
+
+`scan-domain` does not yet emit; mesh emission is currently `scan`-only.
 
 ## A note on the published build
 

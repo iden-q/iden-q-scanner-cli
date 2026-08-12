@@ -52,8 +52,14 @@ paths CI depends on.
 
 - **Consumes** `@iden-q/scanner-lib`; all detection gaps are inherited from there — no
   detection work belongs in this repo.
-- No dependency on `tx-platform` or the mesh — this is a pure client CLI, so its whole
-  backlog is independently actionable.
+- **Optionally reaches the mesh** via `--connect-mesh` (`src/mesh-emit.ts`), which uses
+  `@iden-q/scanner-lib`'s `createMeshClient` + `emitObservations` to emit anonymous
+  key-establishment telemetry to `tx-platform`'s ingest endpoint. It is opt-in, off the
+  scan's critical path (never affects findings or exit code), and standalone by default —
+  so the CLI stays independently actionable, but it is no longer a pure offline client.
+  Still open: `scan-domain` does not emit yet (mesh emission is `scan`-only), and there
+  is no execution test that exercises the live emit path (the `resolveMeshEmit` resolver
+  is unit-tested; the network round-trip is covered in the library).
 
 ## Where to start
 
