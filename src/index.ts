@@ -15,7 +15,7 @@ ${out.bold("Options:")}
   --output <path>                 Where to write the report file (default: ./q-scanner-report.<ext>, written every run)
   --fail-on <critical|high|medium|low>
                                   Exit 1 if the worst finding meets/exceeds this severity — wire into CI to gate a build
-  --connect-mesh                  Emit anonymous key-establishment telemetry to the iden-q mesh (scan only;
+  --connect-mesh                  Emit anonymous CBOM telemetry to the iden-q mesh (both scan and scan-domain;
                                   standalone by default). Never affects the scan result or exit code.
   --mesh-key <clientId:apiKey>    Mesh API key inline; or set IDENQ_MESH_CLIENT_ID + IDENQ_MESH_API_KEY (preferred in CI).
                                   Public-key auth instead: IDENQ_MESH_CLIENT_ID + IDENQ_MESH_PRIVATE_KEY (the ML-DSA-44

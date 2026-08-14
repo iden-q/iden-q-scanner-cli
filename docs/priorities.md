@@ -53,19 +53,24 @@ paths CI depends on.
 - **Consumes** `@iden-q/scanner-lib`; all detection gaps are inherited from there — no
   detection work belongs in this repo.
 - **Optionally reaches the mesh** via `--connect-mesh` (`src/mesh-emit.ts`), which uses
-  `@iden-q/scanner-lib`'s `createMeshClient` + `emitObservations` to emit anonymous
-  key-establishment telemetry to `tx-platform`'s ingest endpoint. It is opt-in, off the
-  scan's critical path (never affects findings or exit code), and standalone by default —
-  so the CLI stays independently actionable, but it is no longer a pure offline client.
-  Both mesh credential modes are carried: an API key (`client_credentials`, inline or env)
-  and a public-key credential (`private_key_jwt` — an ML-DSA-44 private JWK in
-  `IDENQ_MESH_PRIVATE_KEY`, env-only, signed locally with `@iden-q/post-quantum`; the
-  private half never leaves the process). `buildMeshCredential` derives the signer and is
-  unit-tested against the JWK's own verification key.
-  Still open: `scan-domain` does not emit yet (mesh emission is `scan`-only), and there
-  is no execution test that exercises the live emit path (the `resolveMeshEmit` resolver
-  and `buildMeshCredential` are unit-tested; the network round-trip is covered in the
-  library).
+  `@iden-q/scanner-lib`'s `createMeshClient` + `emitObservations` to emit anonymous CBOM
+  telemetry to `tx-platform`'s ingest endpoint. It is opt-in, off the scan's critical path
+  (never affects findings or exit code), and standalone by default — so the CLI stays
+  independently actionable, but it is no longer a pure offline client. Both mesh credential
+  modes are carried: an API key (`client_credentials`, inline or env) and a public-key
+  credential (`private_key_jwt` — an ML-DSA-44 private JWK in `IDENQ_MESH_PRIVATE_KEY`,
+  env-only, signed locally with `@iden-q/post-quantum`; the private half never leaves the
+  process). `buildMeshCredential` derives the signer and is unit-tested against the JWK's
+  own verification key.
+  **`scan-domain` now emits too — DONE.** On `@iden-q/scanner-lib@^1.3.0`, both commands map
+  through the library: `scan` builds one observation per file (`buildObservation`), and
+  `scan-domain` builds one per probe (`buildProbeObservation`) — the class from the negotiated
+  key-exchange group, the issuer named from its `O`, the same primitive the web scanner uses,
+  so both surfaces emit the same graph and the same CA token. (The `1.3.0` bump also replaced
+  the removed `observationsFromFindings` with per-source `buildObservation`.) Still open: no
+  execution test exercises the live emit path (the `resolveMeshEmit` resolver and
+  `buildMeshCredential` are unit-tested, and the mapping's vectors live in the library; the
+  network round-trip is not exercised here).
 
 ## Where to start
 
