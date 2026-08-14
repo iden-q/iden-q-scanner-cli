@@ -1,5 +1,21 @@
 # @iden-q/scanner-cli
 
+## 0.6.0
+
+### Minor Changes
+
+- [#11](https://github.com/iden-q/iden-q-scanner-cli/pull/11) [`cffbbf2`](https://github.com/iden-q/iden-q-scanner-cli/commit/cffbbf2d4bf51850e259c2cb592f6e13df13404e) Thanks [@cesarmoralesonya](https://github.com/cesarmoralesonya)! - Support public-key (`private_key_jwt`) mesh credentials alongside the API key.
+
+  `--connect-mesh` now accepts either credential the mesh takes. The API-key path
+  is unchanged (`--mesh-key clientId:apiKey`, or `IDENQ_MESH_CLIENT_ID` +
+  `IDENQ_MESH_API_KEY`). New: a public-key credential — the ML-DSA-44 private JWK
+  the console mints — supplied as `IDENQ_MESH_PRIVATE_KEY` (the JWK JSON) with
+  `IDENQ_MESH_CLIENT_ID`. The CLI derives the signing key with
+  `@iden-q/post-quantum` and signs a short-lived assertion per token; the private
+  half never leaves the process and no shared secret is sent. It is environment-only
+  (a private key is a secret, never in argv). When both are configured, the private
+  JWK is preferred over the API key.
+
 ## 0.5.0
 
 ### Minor Changes
