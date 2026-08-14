@@ -10,6 +10,18 @@ robustness, not broken features. (Detection coverage itself lives in
 
 ## High
 
+- **The device-flow approve→token step has no automated coverage, structurally.**
+  `q-scanner login` (RFC 8628) is well unit-tested up to the network edge — the poll
+  state machine (`authorization_pending`/`slow_down`/`access_denied`/`expired_token`,
+  local expiry) in `src/auth/device-flow.test.ts`, the 0600 session store, token
+  decode/refresh, the read-modify-write history merge, and offline command behaviour.
+  What no test drives is the full ceremony end to end: approval requires a person to
+  sign in and step up with a passkey in the console, so the final mint cannot be
+  automated from here. It was smoke-verified by hand against dev (the request + poll
+  loop reach the deployed flow, which answers the RFC shape); the same limit means
+  live `--save`/`history` need a real login. This is inherent to the flow, not a
+  deferred test — noted so it is not mistaken for full coverage.
+
 - **An invalid `--format` silently degrades to `table` instead of erroring.**
   `src/commands/scan.ts:71` (and identically `src/commands/scan-domain.ts`):
   `values.format === "cbom" ? "cbom" : values.format === "json" ? "json" : "table"`.

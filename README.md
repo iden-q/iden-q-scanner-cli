@@ -116,6 +116,25 @@ The scanner is **standalone by default** — it makes no network call and works 
 
 Both `scan` and `scan-domain` emit through the same library mapping (`@iden-q/scanner-lib`'s `buildObservation` / `buildProbeObservation`), so a domain scan here contributes the exact same graph — and the same issuer token for the same CA — as the web scanner does.
 
+## Signing in (`login`) and cloud scan history (`--save`)
+
+The mesh path above is **anonymous machine telemetry** — no person, no account. A separate, opt-in path lets a **person** sign in and save their scans to their own iden-q account, exactly like the web scanner. It uses the OAuth 2.0 **device flow** (RFC 8628): the CLI never stores a static secret, only short-lived tokens.
+
+```bash
+q-scanner login                 # prints a URL + code; approve it in the browser
+q-scanner scan ./src --save     # push this scan to your cloud history
+q-scanner scan-domain idenq.io --save
+q-scanner history               # list your cloud history (--clear to delete it)
+q-scanner whoami                # who you are, your roles, and the environment
+q-scanner logout                # revoke and forget the session
+```
+
+How `login` works: the CLI asks the platform for a `device_code` and a short `user_code`, prints where to approve it, and polls while you sign in **and step up with a passkey** in the console. On approval it stores your person token (access + refresh) under `~/.config/q-scanner/session.json`, mode `0600` — readable only by you — and enables the `scanner` product for your account so `--save` works straight away. The stored access token is refreshed automatically when it expires (within the twelve-hour refresh window); after that, `login` again.
+
+- **Cloud history is one shared snapshot**, the same one the web dashboard reads and writes. `--save` **appends** this scan to it (read-modify-write) rather than overwriting, so a CLI scan shows up in the web and vice versa. `--save` is off the critical path — a save failure is a stderr warning, never a change to findings or exit code.
+- **Environment.** `login` targets prod (`https://idenq.io/api/v1`) by default; point it at another environment with `--api-url` or `IDENQ_API_URL`. The token is bound to the environment it was minted for, so `whoami`/`--save`/`history` all use the same one.
+- **This is the person axis, not the mesh.** `--connect-mesh` (machine, anonymous, per-tenant) and `login`/`--save` (person, identified, your account) are independent — you can use either, both, or neither.
+
 ## A note on the published build
 
 The `dist/` shipped to npm is obfuscated (via `javascript-obfuscator`) as an anti-copying deterrent. It doesn't change behavior — same inputs, same outputs, same exit codes. If you're debugging the CLI itself, build from source instead (see Developing).

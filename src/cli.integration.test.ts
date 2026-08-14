@@ -36,6 +36,9 @@ function runCli(args: string[], input?: string) {
     input,
     encoding: "utf8",
     cwd,
+    // Point the session store at the scratch cwd so auth commands never read or
+    // write the real user's ~/.config/q-scanner — each test is isolated.
+    env: { ...process.env, XDG_CONFIG_HOME: cwd },
   });
 }
 
@@ -174,6 +177,45 @@ test("--help prints usage and exits 0", (t) => {
   assert.equal(result.status, 0);
   assert.match(result.stdout, /Usage:/);
   assert.match(result.stdout, /scan-domain/);
+});
+
+test("--help lists the auth commands and the --save option", (t) => {
+  if (!existsSync(distIndex)) return t.skip("dist/index.js not built — run yarn build first");
+
+  const result = runCli(["--help"]);
+
+  assert.equal(result.status, 0);
+  for (const command of ["login", "logout", "whoami", "history"]) {
+    assert.match(result.stdout, new RegExp(`q-scanner ${command}`), `--help should list ${command}`);
+  }
+  assert.match(result.stdout, /--save/);
+});
+
+test("whoami with no session says so and exits 1", (t) => {
+  if (!existsSync(distIndex)) return t.skip("dist/index.js not built — run yarn build first");
+
+  const result = runCli(["whoami"]);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Not logged in/);
+});
+
+test("logout with no session is not an error", (t) => {
+  if (!existsSync(distIndex)) return t.skip("dist/index.js not built — run yarn build first");
+
+  const result = runCli(["logout"]);
+
+  assert.equal(result.status, 0);
+  assert.match(result.stderr, /were not logged in/);
+});
+
+test("history with no session says to log in and exits 1", (t) => {
+  if (!existsSync(distIndex)) return t.skip("dist/index.js not built — run yarn build first");
+
+  const result = runCli(["history"]);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Not logged in/);
 });
 
 test("running with no command prints usage and exits 1", (t) => {

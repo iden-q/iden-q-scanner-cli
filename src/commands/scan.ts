@@ -17,6 +17,7 @@ import { applyFailOn } from "../severity-gate.js";
 import { resolveLocale } from "../locale.js";
 import { Spinner } from "../spinner.js";
 import { maybeEmitToMesh } from "../mesh-emit.js";
+import { maybeSaveFolder } from "../auth/save-scan.js";
 
 async function readStdin(): Promise<string> {
   const chunks: Buffer[] = [];
@@ -36,6 +37,7 @@ export async function scanCommand(argv: string[]): Promise<void> {
       "connect-mesh": { type: "boolean", default: false },
       "mesh-key": { type: "string" },
       "mesh-url": { type: "string" },
+      save: { type: "boolean", default: false },
     },
     allowPositionals: true,
   });
@@ -101,6 +103,10 @@ export async function scanCommand(argv: string[]): Promise<void> {
     { connect: values["connect-mesh"], key: values["mesh-key"], url: values["mesh-url"] },
     locale
   );
+
+  // Opt-in cloud save, also before the fail-on gate: a gate-failing scan is still
+  // worth keeping in the user's history. Needs a login; off the critical path.
+  await maybeSaveFolder(values.save, values.stdin ? "stdin" : positionals[0] ?? "scan", results, locale);
 
   const worst = worstSeverity(results.flatMap((r) => r.findings).map(getSeverity));
   applyFailOn(worst, values["fail-on"]);

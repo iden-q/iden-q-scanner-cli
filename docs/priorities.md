@@ -71,6 +71,19 @@ paths CI depends on.
   execution test exercises the live emit path (the `resolveMeshEmit` resolver and
   `buildMeshCredential` are unit-tested, and the mapping's vectors live in the library; the
   network round-trip is not exercised here).
+- **Person login (device flow) + cloud history — DONE, one live gap.** `q-scanner login`
+  runs the RFC 8628 device authorization flow against `tx-platform` (`/iam/auth/device/code`
+  + poll `/iam/auth/token` with `grant_type=device_code`), stores the person token 0600 under
+  `~/.config/q-scanner/session.json`, self-grants `scanner:user`, and refreshes on use;
+  `logout`/`whoami`/`history` and `--save` (append to the shared `/quantum/scans` snapshot,
+  the web's exact schema) hang off it. This is the PERSON axis — independent of the mesh
+  (machine, anonymous). Well covered by units: the poll state machine (`device-flow.test.ts`),
+  the 0600 session store, token decode/refresh, the read-modify-write merge, and offline
+  command behaviour (`whoami`/`logout`/`history` with no session). The one gap is structural,
+  not an oversight: the full approve→token step needs a person to approve in the console with
+  a passkey, so no automated test can drive it end to end — it was smoke-verified by hand
+  against dev (request + poll loop reach the deployed flow; the deployed endpoints answer the
+  RFC shape). Live `--save` likewise needs a real login.
 
 ## Where to start
 

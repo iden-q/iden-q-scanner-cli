@@ -6,6 +6,7 @@ import { applyFailOn } from "../severity-gate.js";
 import { resolveLocale } from "../locale.js";
 import { Spinner } from "../spinner.js";
 import { maybeEmitToMesh } from "../mesh-emit.js";
+import { maybeSaveDomain } from "../auth/save-scan.js";
 
 export async function scanDomainCommand(argv: string[]): Promise<void> {
   const { values, positionals } = parseArgs({
@@ -18,6 +19,7 @@ export async function scanDomainCommand(argv: string[]): Promise<void> {
       "connect-mesh": { type: "boolean", default: false },
       "mesh-key": { type: "string" },
       "mesh-url": { type: "string" },
+      save: { type: "boolean", default: false },
     },
     allowPositionals: true,
   });
@@ -57,6 +59,10 @@ export async function scanDomainCommand(argv: string[]): Promise<void> {
     { connect: values["connect-mesh"], key: values["mesh-key"], url: values["mesh-url"] },
     locale
   );
+
+  // Opt-in cloud save (one domain session), before the connection-failure exit so
+  // even a failed probe is recorded in history. Needs a login; off the critical path.
+  await maybeSaveDomain(values.save, domain, [result], locale);
 
   if (!result.connected) {
     console.error(result.error ?? "connection failed");
