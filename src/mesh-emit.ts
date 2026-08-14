@@ -1,5 +1,5 @@
-import type { Finding, Locale } from "@iden-q/scanner-lib";
-import { createMeshClient, observationsFromFindings, emitObservations } from "@iden-q/scanner-lib/node";
+import type { Locale, Observation } from "@iden-q/scanner-lib";
+import { createMeshClient, emitObservations } from "@iden-q/scanner-lib/node";
 import type { MeshClientCredential } from "@iden-q/scanner-lib/node";
 import { signingKeysFromPrivateJwk, sign as mldsaSign, mldsaSignature } from "@iden-q/post-quantum";
 import { err, palette } from "./theme.js";
@@ -70,7 +70,7 @@ const COPY: Record<
     missingUrl: "--connect-mesh: falta la URL del mesh (--mesh-url o IDENQ_MESH_URL); no se emite.",
     badPrivateKey:
       "--connect-mesh: IDENQ_MESH_PRIVATE_KEY no es un JWK ML-DSA-44 válido; no se emite al mesh.",
-    nothing: "Mesh: nada que emitir (ninguna observación de establecimiento de clave).",
+    nothing: "Mesh: nada que emitir (ninguna observación).",
     emitting: (url) => `Mesh: emitiendo telemetría anónima a ${url}…`,
     delivered: (accepted, nodes, edges) =>
       `Mesh: ${accepted} observaciones aceptadas (${nodes} nodos, ${edges} aristas).`,
@@ -84,7 +84,7 @@ const COPY: Record<
     missingUrl: "--connect-mesh: missing mesh URL (--mesh-url or IDENQ_MESH_URL); not emitting.",
     badPrivateKey:
       "--connect-mesh: IDENQ_MESH_PRIVATE_KEY is not a valid ML-DSA-44 JWK; not emitting to the mesh.",
-    nothing: "Mesh: nothing to emit (no key-establishment observations).",
+    nothing: "Mesh: nothing to emit (no observations).",
     emitting: (url) => `Mesh: emitting anonymous telemetry to ${url}…`,
     delivered: (accepted, nodes, edges) =>
       `Mesh: ${accepted} observations accepted (${nodes} nodes, ${edges} edges).`,
@@ -173,15 +173,17 @@ export function buildMeshCredential(config: MeshEmitConfig): MeshClientCredentia
   return { clientId: config.clientId, sign: (message) => mldsaSign(sk, message).signature };
 }
 
-/** Emit a scan's findings to the mesh. Never throws — telemetry is off the scan's
- * critical path — so any failure is a stderr warning, not an exception. */
+/** Emit a scan's observations to the mesh. Never throws — telemetry is off the
+ * scan's critical path — so any failure is a stderr warning, not an exception.
+ * The caller maps its scan to observations (one per source: `buildObservation`
+ * per file for a folder scan, `buildProbeObservation` per domain for a TLS scan),
+ * so this stays agnostic to what produced them. */
 export async function runMeshEmit(
-  findings: readonly Finding[],
+  observations: Observation[],
   config: MeshEmitConfig,
   locale: Locale
 ): Promise<void> {
   const copy = COPY[locale];
-  const observations = observationsFromFindings(findings);
   if (observations.length === 0) {
     console.error(err.dim(copy.nothing));
     return;
@@ -206,9 +208,11 @@ export async function runMeshEmit(
 }
 
 /** The opt-in entry point for a command: resolve, warn-and-skip if misconfigured,
- * or emit. Safe to call unconditionally — it does nothing unless `--connect-mesh`. */
+ * or emit. Safe to call unconditionally — it does nothing unless `--connect-mesh`.
+ * The caller passes the observations it mapped from its own scan (one per source),
+ * so both `scan` (files) and `scan-domain` (a probe) share this one path. */
 export async function maybeEmitToMesh(
-  findings: readonly Finding[],
+  observations: Observation[],
   options: MeshEmitOptions,
   locale: Locale
 ): Promise<void> {
@@ -218,5 +222,5 @@ export async function maybeEmitToMesh(
     console.error(err.fg(palette.warning, COPY[locale][resolution.reason]));
     return;
   }
-  await runMeshEmit(findings, resolution.config, locale);
+  await runMeshEmit(observations, resolution.config, locale);
 }

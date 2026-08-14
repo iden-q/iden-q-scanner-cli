@@ -37,7 +37,7 @@ Options:
   --output <path>                 Where to write the report file (default: ./q-scanner-report.<ext>, written every run)
   --fail-on <critical|high|medium|low>
                                   Exit 1 if the worst finding meets/exceeds this severity
-  --connect-mesh                  Emit anonymous key-establishment telemetry to the iden-q mesh (scan only;
+  --connect-mesh                  Emit anonymous CBOM telemetry to the iden-q mesh (scan and scan-domain;
                                   standalone by default). Never affects the scan result or exit code.
   --mesh-key <clientId:apiKey>    Mesh API key inline; or set IDENQ_MESH_CLIENT_ID + IDENQ_MESH_API_KEY (preferred in CI)
   --mesh-url <url>                Mesh base URL; or IDENQ_MESH_URL. Required to emit — there is no default target.
@@ -93,9 +93,18 @@ IDENQ_MESH_URL=https://idenq.io \
   q-scanner scan ./src --connect-mesh
 ```
 
+A `scan-domain` contributes too — the negotiated key-exchange group's class (classical / hybrid / post-quantum) and the certificate's issuer, named from its organisation:
+
+```bash
+IDENQ_MESH_CLIENT_ID=$MESH_CLIENT_ID \
+IDENQ_MESH_API_KEY=$MESH_API_KEY \
+IDENQ_MESH_URL=https://idenq.io \
+  q-scanner scan-domain example.com --connect-mesh
+```
+
 ## Connecting to the mesh (`--connect-mesh`)
 
-The scanner is **standalone by default** — it makes no network call and works fully offline. `--connect-mesh` opts a `scan` in to emitting **anonymous key-establishment telemetry** (which fraction of detected key establishment is classical, hybrid, or post-quantum) to the iden-q mesh. Nothing that identifies the machine, the host, or the code is sent — only public facts and counts.
+The scanner is **standalone by default** — it makes no network call and works fully offline. `--connect-mesh` opts a `scan` or a `scan-domain` in to emitting **anonymous CBOM telemetry** — the shared node/edge graph, with each key establishment classed classical, hybrid, or post-quantum — to the iden-q mesh. Nothing that identifies the machine, the host, or the code is sent — only public facts and counts. For a `scan-domain` the key-establishment class comes from the negotiated TLS key-exchange group (never the certificate key), and the issuer is named from its organisation.
 
 - **Off the critical path.** Emission never changes the scan's findings, output, or exit code. A mesh that is unreachable, misconfigured, or slow yields at most a warning on stderr; `--fail-on` still gates on the scan alone.
 - **Credential** — either mode the mesh accepts:
@@ -105,7 +114,7 @@ The scanner is **standalone by default** — it makes no network call and works 
   Precedence: an inline `--mesh-key` wins; otherwise a private JWK in the environment is preferred over an API key (public-key auth is the stronger of the two).
 - **Target** — required, no default: `--mesh-url` or `IDENQ_MESH_URL`. Emitting is always a named target, never an accidental production write.
 
-`scan-domain` does not yet emit; mesh emission is currently `scan`-only.
+Both `scan` and `scan-domain` emit through the same library mapping (`@iden-q/scanner-lib`'s `buildObservation` / `buildProbeObservation`), so a domain scan here contributes the exact same graph — and the same issuer token for the same CA — as the web scanner does.
 
 ## A note on the published build
 

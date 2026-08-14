@@ -7,6 +7,8 @@ import {
   worstSeverity,
   buildReport,
   buildCbom,
+  buildObservation,
+  type Observation,
   type ScanResult,
 } from "@iden-q/scanner-lib";
 import { walk, isBinaryCert } from "../fs-walk.js";
@@ -88,9 +90,14 @@ export async function scanCommand(argv: string[]): Promise<void> {
   await saveReportFile(values.output ?? defaultOutputPath(format), fileContent);
 
   // Opt-in mesh emission, before the fail-on gate (which may exit): a scan that
-  // fails its CI severity gate still contributes its anonymous observations.
+  // fails its CI severity gate still contributes its anonymous observations. One
+  // observation PER FILE (per source), so a folder of 100 RSA files contributes
+  // 100 observations the border can weight — not one deduped subgraph.
+  const observations = results
+    .map((result) => buildObservation(result.findings))
+    .filter((observation): observation is Observation => observation !== null);
   await maybeEmitToMesh(
-    results.flatMap((r) => r.findings),
+    observations,
     { connect: values["connect-mesh"], key: values["mesh-key"], url: values["mesh-url"] },
     locale
   );
