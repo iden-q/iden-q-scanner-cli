@@ -65,7 +65,15 @@ jobs:
 
   test:
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    # Fail OPEN, not closed. With a plain `needs:` a FAILED `changes` job
+    # skips this one by default -- and there is no gate job here, so the
+    # suite would report `skipped`, nothing would go red, and the pull
+    # request could merge with no verification having run and nothing
+    # saying so. `!cancelled()` overrides that default skip, and testing
+    # for `!= 'false'` rather than `== 'true'` means only an explicit
+    # "documentation only" verdict skips the suite: a `changes` that died
+    # leaves the output empty, which is not 'false', so this runs.
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
