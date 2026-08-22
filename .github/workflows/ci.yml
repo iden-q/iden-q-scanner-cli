@@ -9,7 +9,56 @@ permissions:
   contents: read
 
 jobs:
+  # The filter lives HERE and not in the trigger above, and that is not a style
+  # choice. A `paths-ignore` on the trigger means the job never runs, and a
+  # check that never runs is not "skipped" to GitHub -- it is "expected", so a
+  # pull request with a required check waits forever for a result nobody will
+  # report. Deciding it in a job lets the suite report `skipped`, which IS a
+  # result. Same shape as `iden-q-tx-platform`, which learned it first.
+  changes:
+    name: What changed
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.detect.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # base.sha and head.sha rather than a symbolic range: on a pull_request
+      # event HEAD is a merge commit GitHub creates, so `HEAD~1` and
+      # `origin/main` both mean something slightly different from "what this
+      # pull request changes". These two shas are exactly its endpoints.
+      - name: Which files does this pull request touch
+        id: detect
+        run: |
+          set -euo pipefail
+
+          # A push has no pull request, so the two shas below are empty and
+          # `git diff` would fail -- taking this job down and with it the suite
+          # that needs its output. There is nothing to decide either: the
+          # filter exists to spare documentation-only pull requests.
+          if [ "${{ github.event_name }}" != 'pull_request' ]; then
+            echo 'code=true' >> "$GITHUB_OUTPUT"
+            echo '::notice::not a pull request -- running everything'
+            exit 0
+          fi
+
+          changed="$(git diff --name-only \
+            '${{ github.event.pull_request.base.sha }}' \
+            '${{ github.event.pull_request.head.sha }}')"
+          echo "$changed"
+
+          if printf '%s\n' "$changed" | grep -qvE '\.md$'; then
+            echo 'code=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'code=false' >> "$GITHUB_OUTPUT"
+            echo '::notice::documentation only -- the suite will be skipped'
+          fi
+
   test:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
