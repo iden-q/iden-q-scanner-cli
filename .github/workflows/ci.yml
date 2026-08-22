@@ -49,6 +49,13 @@ jobs:
             '${{ github.event.pull_request.head.sha }}')"
           echo "$changed"
 
+          # An EMPTY diff lands on `code=true` and runs everything, which is
+          # the safe direction and is stated here so it reads as a decision
+          # rather than an accident: `printf` still emits one empty line, that
+          # line does not match `\.md$`, and `-v` selects it. For a filter whose
+          # job is to SKIP work, the dangerous failure is skipping a
+          # verification that was needed; running one that was not costs
+          # minutes. Measured, not assumed.
           if printf '%s\n' "$changed" | grep -qvE '\.md$'; then
             echo 'code=true' >> "$GITHUB_OUTPUT"
           else
