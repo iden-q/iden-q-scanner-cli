@@ -9,7 +9,71 @@ permissions:
   contents: read
 
 jobs:
+  # The filter lives HERE and not in the trigger above, and that is not a style
+  # choice. A `paths-ignore` on the trigger means the job never runs, and a
+  # check that never runs is not "skipped" to GitHub -- it is "expected", so a
+  # pull request with a required check waits forever for a result nobody will
+  # report. Deciding it in a job lets the suite report `skipped`, which IS a
+  # result. Same shape as `iden-q-tx-platform`, which learned it first.
+  changes:
+    name: What changed
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.detect.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # base.sha and head.sha rather than a symbolic range: on a pull_request
+      # event HEAD is a merge commit GitHub creates, so `HEAD~1` and
+      # `origin/main` both mean something slightly different from "what this
+      # pull request changes". These two shas are exactly its endpoints.
+      - name: Which files does this pull request touch
+        id: detect
+        run: |
+          set -euo pipefail
+
+          # A push has no pull request, so the two shas below are empty and
+          # `git diff` would fail -- taking this job down and with it the suite
+          # that needs its output. There is nothing to decide either: the
+          # filter exists to spare documentation-only pull requests.
+          if [ "${{ github.event_name }}" != 'pull_request' ]; then
+            echo 'code=true' >> "$GITHUB_OUTPUT"
+            echo '::notice::not a pull request -- running everything'
+            exit 0
+          fi
+
+          changed="$(git diff --name-only \
+            '${{ github.event.pull_request.base.sha }}' \
+            '${{ github.event.pull_request.head.sha }}')"
+          echo "$changed"
+
+          # An EMPTY diff lands on `code=true` and runs everything, which is
+          # the safe direction and is stated here so it reads as a decision
+          # rather than an accident: `printf` still emits one empty line, that
+          # line does not match `\.md$`, and `-v` selects it. For a filter whose
+          # job is to SKIP work, the dangerous failure is skipping a
+          # verification that was needed; running one that was not costs
+          # minutes. Measured, not assumed.
+          if printf '%s\n' "$changed" | grep -qvE '\.md$'; then
+            echo 'code=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'code=false' >> "$GITHUB_OUTPUT"
+            echo '::notice::documentation only -- the suite will be skipped'
+          fi
+
   test:
+    needs: changes
+    # Fail OPEN, not closed. With a plain `needs:` a FAILED `changes` job
+    # skips this one by default -- and there is no gate job here, so the
+    # suite would report `skipped`, nothing would go red, and the pull
+    # request could merge with no verification having run and nothing
+    # saying so. `!cancelled()` overrides that default skip, and testing
+    # for `!= 'false'` rather than `== 'true'` means only an explicit
+    # "documentation only" verdict skips the suite: a `changes` that died
+    # leaves the output empty, which is not 'false', so this runs.
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
