@@ -164,4 +164,4 @@ Follow the prompt (bump type + a short summary — this becomes the changelog en
 
 ## License
 
-AGPL-3.0-or-later — see [LICENSE](./LICENSE). If you modify this CLI and distribute it (including running it as a network service), you must make your modified source available under the same license.
+Proprietary — see [LICENSE](./LICENSE). IdenQ's decision of 2026-09-02, replacing the AGPL-3.0-or-later the CLI carried until then: no right to use, copy, modify or distribute it is granted by its presence on npm or in this repository, only by a written agreement with IdenQ.
