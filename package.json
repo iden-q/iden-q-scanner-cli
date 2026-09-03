@@ -2,7 +2,7 @@
   "name": "@iden-q/scanner-cli",
   "version": "0.7.0",
   "description": "Command-line post-quantum cryptography exposure scanner — scan files, folders, and domains from your terminal or CI.",
-  "license": "AGPL-3.0-or-later",
+  "license": "SEE LICENSE IN LICENSE",
   "type": "module",
   "packageManager": "yarn@3.2.1",
   "engines": {
