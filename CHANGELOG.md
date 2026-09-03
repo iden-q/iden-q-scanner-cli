@@ -1,5 +1,11 @@
 # @iden-q/scanner-cli
 
+## 0.7.1
+
+### Patch Changes
+
+- [#17](https://github.com/iden-q/iden-q-scanner-cli/pull/17) [`ca6001d`](https://github.com/iden-q/iden-q-scanner-cli/commit/ca6001d5292b6d58ea850ba40336ab12077e798b) Thanks [@cesarmoralesonya](https://github.com/cesarmoralesonya)! - Proprietary licence (IdenQ, 2026-09-02) replaces AGPL-3.0-or-later; `LICENSE` and the package metadata updated, no code change.
+
 ## 0.7.0
 
 ### Minor Changes
