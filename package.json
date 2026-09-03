@@ -1,6 +1,6 @@
 {
   "name": "@iden-q/scanner-cli",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Command-line post-quantum cryptography exposure scanner — scan files, folders, and domains from your terminal or CI.",
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",
