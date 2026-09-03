@@ -49,14 +49,27 @@ jobs:
             '${{ github.event.pull_request.head.sha }}')"
           echo "$changed"
 
-          # An EMPTY diff lands on `code=true` and runs everything, which is
-          # the safe direction and is stated here so it reads as a decision
-          # rather than an accident: `printf` still emits one empty line, that
-          # line does not match `\.md$`, and `-v` selects it. For a filter whose
-          # job is to SKIP work, the dangerous failure is skipping a
-          # verification that was needed; running one that was not costs
-          # minutes. Measured, not assumed.
-          if printf '%s\n' "$changed" | grep -qvE '\.md$'; then
+          # A HERE-STRING, never `printf | grep -q`, and that is this filter's
+          # correctness rather than its style. `grep -q` exits at its FIRST match
+          # and closes the pipe; `printf` then dies of SIGPIPE, `set -o pipefail`
+          # promotes that to the pipeline's status, the `if` takes the else
+          # branch, and a pull request full of code is declared documentation
+          # with every suite skipped and the run green. A race on a short file
+          # list and a certainty on a long one: measured in iden-q-chain-indexer
+          # on 2026-09-03, 300 of 300 runs of the piped form called a 2,477-file
+          # diff documentation and 0 of 300 of this form did, and the CI log of
+          # the run that found it carries `printf: write error: Broken pipe`
+          # immediately above the wrong verdict. It only ever fails in that one
+          # direction: a genuinely documentation-only list gives grep no match to
+          # stop at, so printf always finishes and those runs were always right.
+          #
+          # An EMPTY diff still lands on `code=true` and runs everything, which
+          # is the safe direction and a decision rather than an accident: the
+          # here-string emits one empty line, that line does not match the
+          # pattern, and `-v` selects it. For a filter whose job is to SKIP work,
+          # the dangerous failure is skipping a verification that was needed;
+          # running one that was not costs minutes.
+          if grep -qvE '\.md$' <<< "$changed"; then
             echo 'code=true' >> "$GITHUB_OUTPUT"
           else
             echo 'code=false' >> "$GITHUB_OUTPUT"
